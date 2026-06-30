@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Trend Report</title>
+<script>
+(function() {
+    var lang = navigator.language || navigator.userLanguage || 'en';
+    var supported = {'en': '/en/', 'zh-CN': '/zh-CN/', 'zh-TW': '/zh-TW/'};
+    var path = '/en/';
+    if (lang.startsWith('zh-CN') || lang.startsWith('zh-Hans')) {
+        path = '/zh-CN/';
+    } else if (lang.startsWith('zh-TW') || lang.startsWith('zh-Hant') || lang.startsWith('zh-HK')) {
+        path = '/zh-TW/';
+    } else if (lang.startsWith('zh')) {
+        path = '/zh-CN/';
+    }
+    // Check cookie override
+    var cookies = document.cookie.split('; ');
+    for (var i = 0; i < cookies.length; i++) {
+        var parts = cookies[i].split('=');
+        if (parts[0] === 'trend_lang' && supported[parts[1]]) {
+            path = '/' + parts[1] + '/';
+            break;
+        }
+    }
+    window.location.href = path;
+})();
+</script>
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#f5f7fa; color:#4a5a6e; }
+    .loading { text-align:center; }
+    .loading h1 { font-size:24px; color:#1a3a5c; margin-bottom:8px; }
+    .spinner { width:32px; height:32px; border:3px solid #e2e8f0; border-top-color:#4a9eff; border-radius:50%; animation:spin 0.8s linear infinite; margin:16px auto; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .lang-links { margin-top:16px; display:flex; gap:12px; justify-content:center; }
+    .lang-links a { color:#4a9eff; text-decoration:none; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="loading">
+    <h1>Daily Trend Report</h1>
+    <div class="spinner"></div>
+    <p>Redirecting to your preferred language…</p>
+    <div class="lang-links">
+        <a href="/en/">English</a>
+        <a href="/zh-CN/">简体中文</a>
+        <a href="/zh-TW/">繁體中文</a>
+    </div>
+</div>
+</body>
+</html>
