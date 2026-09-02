@@ -25,12 +25,16 @@ status: complete
 
 ## Benchmark 結果
 
-### 生成速度 (BF16, CPU)
-| 測試 | Prompt tok/s | Generation tok/s | 備註 |
-|------|:---:|:---:|------|
-| 短問答 (150 tok) | 55.6 | **7.53** | 有 reasoning mode |
-| 中文短文 (88 tok) | 46.3 | **5.63** | reasoning off, 正式輸出 |
-| 長生成 (400 tok) | 51.4 | 6.75 | reasoning on 會食晒 budget |
+### 生成速度 (BF16 vs Q4_K_M, CPU)
+| 版本 | 檔案大小 | 短問答 tok/s | 長生成 tok/s | 中文質素 |
+|------|:---:|:---:|:---:|------|
+| **BF16** (官方) | 3.2GB | 7.53 | 5.63-6.75 | ✅ 流暢 |
+| **Q4_K_M** (community) | 1.0GB | **12.3** | **15.35** | ✅ 流暢 (內容更具體) |
+
+### Q4 加速倍率
+- 短問答: 7.53 → 12.3 tok/s (**+63%**)
+- 長生成: 5.63 → 15.35 tok/s (**+173%** — 長生成下 Q4 優勢更明顯)
+- 檔案: 3.2GB → 1.0GB (**-69%**)
 
 ### 能力驗證
 | 測試 | 結果 |
@@ -60,7 +64,7 @@ status: complete
 
 ## 部署建議
 
-1. **短期**: 用 Q4_K_M 版本 (下載中), RK3588 上試 8K-16K ctx — 速度會 ~15 tok/s
+1. **短期**: Q4_K_M 已部署 :8085, 12-15 tok/s — **RK3588 可行性確認**, 8GB RAM 可載入
 2. **中期**: 官方 MaaS API 限時免費 — 先做場景 benchmark 再決定本地化
 3. **長期**: Hub 量產候選 — 1M context + reasoning 對 Home Hub / Kitchen Agent 有優勢
 4. **後摩 M50**: Spark 官方支持後摩硬件 — 同 Houmo-M50-Cross-Reference 路徑吻合
@@ -68,20 +72,20 @@ status: complete
 ## 部署紀錄 (penguin 10.5.255.194)
 
 ```bash
-# 模型
-~/models/spark-x2.5/Spark-X2.5-1.7B-BF16.gguf  (3.2GB, ModelScope)
-~/models/spark-x2.5/Spark-X2.5-1.7B-Q4_K_M.gguf (下載中)
+# 模型 (兩個都已下載完成)
+~/models/spark-x2.5/Spark-X2.5-1.7B-BF16.gguf  (3.2GB, ModelScope, 官方)
+~/models/spark-x2.5/Spark-X2.5-1.7B-Q4_K_M.gguf (1.0GB, HF iamalexied community)
 
 # fork (必須)
 ~/llama.cpp-spark/  (XHToken fork, spark2_5 arch)
 
-# server
-llama-server -m ~/models/spark-x2.5/Spark-X2.5-1.7B-BF16.gguf \
-  --host 0.0.0.0 --port 8084 --ctx-size 32768 --batch-size 512 -t 12 \
-  [--reasoning off]   # 關 thinking mode 攞直接輸出
+# server — BF16 @ :8084, Q4 @ :8085
+llama-server -m ~/models/spark-x2.5/Spark-X2.5-1.7B-Q4_K_M.gguf \
+  --host 0.0.0.0 --port 8085 --ctx-size 32768 --batch-size 512 -t 12 \
+  --reasoning off   # 關 thinking mode 攞直接輸出
 
 # 測試 API
-curl http://127.0.0.1:8084/v1/chat/completions -H "Content-Type: application/json" \
+curl http://127.0.0.1:8085/v1/chat/completions -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"..."}]}'
 ```
 
